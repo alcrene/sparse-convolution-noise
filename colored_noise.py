@@ -37,7 +37,7 @@
 # The sparse convolution algorithm [(Lewis, 1989)](https://doi.org/10.1145/74333.74360) is an effective way to generate a noise signal with a prescribed covariance.
 # Moreover, it produces a so-called “solid noise”: a continuous function which can be evaluated at any $t$.[^sparse-noise] This algorithm was originally designed to produce computationally efficient, naturalistic noise for computer graphics, but the same features make it uniquely suited for use as an input noise when integrating systems with standard ODE integrators. Even integrators which adapt their step size are supported.
 #
-# The idea is to generate the desired signal $x$ by convolving a kernel $h$ with a Poisson noise process $γ$:
+# The idea is to generate the desired signal $ξ$ by convolving a kernel $h$ with a Poisson noise process $γ$:
 # \begin{equation}
 # ξ(t) = h \ast γ = \int h(t-t') γ(t') \,dt' \,.
 # \end{equation}
@@ -60,14 +60,25 @@
 # :::{admonition} Remark
 #
 # Assuming the derivatives of the kernel function are known, derivatives of the generated noise are also easy to evaluate:
+#
 # $$ξ^{(n)}(t) = \sum_k a_k h^{(n)}(t-t_k)$$
+#
 # :::
 
 # %% [markdown] user_expressions=[]
 # :::{admonition} Notation
 # :class: hint, margin
 #
-# We use $\tilde{ξ}(ω) = \frac{1}{\sqrt{2π}}\int e^{-iωt} ξ(t)\,dt$ to denote the Fourier transform of $ξ$, and $S_{ξξ}(ω) = \lvert \tilde{ξ}(ω) \rvert^2 = \frac{1}{\sqrt{2π}}\int\!dt\,e^{-iωt} \braket{ξ(t)ξ(t-τ)}_τ$ to denote its power spectrum.[^wiener-kinchine]
+# We use
+# \begin{equation*}
+# \small \tilde{ξ}(ω) = \frac{1}{\sqrt{2π}}\int e^{-iωt} ξ(t)\,dt
+# \end{equation*}
+# to denote the Fourier transform of $ξ$, and
+# \begin{align*}
+# \small S_{ξξ}(ω) &= \lvert \tilde{ξ}(ω) \rvert^2 \\
+# &= \frac{1}{\sqrt{2π}}\int\!dt\,e^{-iωt} \braket{ξ(t)ξ(t-τ)}_τ
+# \end{align*}
+# to denote its power spectrum.[^wiener-kinchine]
 #
 # [^wiener-kinchine]: The equality of the power spectrum with the Fourier transform of the correlation function follows from the Wiener-Kinchine theorem, and the fact that these are wide-sense-stationary processes.
 # :::
@@ -86,11 +97,11 @@
 # &= \frac{ρ\braket{a^2}}{\sqrt{2π}} \lvert \tilde{h}(ω) \rvert^2 \,.
 # \end{align*}
 #
-# [^sloppy-power-spectrum]: This result is easily seen if we assume the Fourier transform of both $γ$ and $h$ to exist. Then using the result that the Fourier transform converts convolutions into products, we have
-# \begin{equation}
-# S_{ξξ}(ω) = \lvert \tilde{ξ}(ω) \rvert^2 = \lvert \tilde{h}(ω) \tilde{γ}(ω) \rvert^2 = \lvert \tilde{γ}(ω) \rvert^2  \lvert \tilde{h}(ω) \rvert^2  \,.
-# \end{equation}
-# However the equality of the power spectra is even more general, since it applies even when the Fourier transforms don't exist. This is useful here, because $γ$ is stochastic: therefore does not have a well-defined Fourier transform, but it does have an autocorrelation function.
+# [^sloppy-power-spectrum]: This result is easily seen if we assume the Fourier transform of both $γ$ and $h$ to exist. Then using the result that the Fourier transform converts convolutions into products, we have  
+#   $\displaystyle
+#   S_{ξξ}(ω) = \lvert \tilde{ξ}(ω) \rvert^2 = \lvert \tilde{h}(ω) \tilde{γ}(ω) \rvert^2 = \lvert \tilde{γ}(ω) \rvert^2  \lvert \tilde{h}(ω) \rvert^2  \,.
+#   $  
+#   However the equality of the power spectra is even more general, since it applies even when the Fourier transforms don't exist. This is useful here, because $γ$ is stochastic: therefore does not have a well-defined Fourier transform, but it does have an autocorrelation function.
 #
 # [^mistake-in-Lewis]: In Lewis this is given as $S_{y}(ω) = S_x(ω) \lvert H(jω)\rvert^2$, with $S_y = S_{ξξ}$, $S_x = S_{γγ}$, $j = i$ and $H$ the Fourier transform of $h$. As far as I can tell the presence of the imaginary factor $j$ is a mistake: at least in the case where the Fourier transform of $γ$ exists, it does not appear (see above footnote). Possibly this is due to the fact that in the study of LTI (linear time-invariant) systems, often the *Laplace* transform of a kernel $h$ is written $H$; then the Fourier transform is written $H(iω)$ (or $H(jω)$ in engineering notation). See e.g. [here](https://en.wikipedia.org/wiki/Linear_time-invariant_system#Fourier_and_Laplace_transforms).
 
@@ -124,7 +135,7 @@
 # \end{equation*}
 # This might have a few advantages over the more common approach of sampling Fourier coefficients:
 # - While sampled spectra are by design non-smooth (or even non-continuous), here both the original function ($C_{ξξ}$) and the estimate ($h$) are functions of time. It is therefore more reasonable to apply smoothing, which might help remove artifacts introduced by the FFT.
-# - Because we are estimated a *kernel* with FFT, and not the signal itself, we can still generate noise signals of arbitrary length and in an online fashion.
+# - Because we are estimating a *kernel* with FFT, and not the signal itself, we can still generate noise signals of arbitrary length and in an online fashion.
 # - Once computed over discretized time, the estimated kernel $h$ could be replaced by something like a spline, making dense evaluation reasonably cheap.
 #
 # [^no-Lorentz-kernel]: Interestingly, using a Lorentz kernel instead *does* result in a fully solvable set of equations. Unfortunately, the resulting noise does not look like one would expect, and its statistics don’t converge (at least not within a reasonable amount of time). Which isn’t so surprising given the number of pathologies associated to the Lorentz distribution (infinite variance, undefined mean…)
@@ -213,8 +224,10 @@ __all__ = ["ColoredNoise"]
 # Parameters
 # ~ + $τ$: Correlation time. Equivalent to the *standard deviation* of the autocorrelation function.
 #   + $σ$: Overall noise strength; more specifically its standard deviation: $\braket{ξ(t)^2} = σ^2$.
-#   + $ρ$: Impulse density, in units of $\frac{\text{\# impulses}}{τ}$. For numerical reasons this must be an integer.  
+#   + $ρ$: Impulse density, in units of $\frac{\text{# impulses}}{τ}$. For numerical reasons this must be an integer.  
 #     This affects what Lewis calls the “quality” of the noise; a too low number will show artifacts (high peaks), which only disappear after averaging many bins or realizations.
+#     Note that increasing $ρ$ does not cause the noise to wash out, but rather the effect saturates: Lewis reports that generated noises stop being distinguishable when $ρ$ is greater than 10. In my own tests I observe something similar, even though my implementation is quite different.
+#     Part of the reason for this is that we scale the variance of the $a_k$ to keep the overall variance of $ξ$ constant.
 #
 # Autocorrelation
 # ~ $\displaystyle C_{ξξ}(s) = σ^2 e^{s^2/2τ^2}$

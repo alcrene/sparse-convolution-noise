@@ -8,12 +8,12 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.14.5
 #   kernelspec:
-#     display_name: Python (emd-paper)
+#     display_name: Python (EMD paper)
 #     language: python
 #     name: emd-paper
 # ---
 
-# %% [markdown] user_expressions=[]
+# %% [markdown]
 # # Using sparse convolutions to generate noisy inputs
 
 # %% [raw] tags=["remove-cell"]
@@ -22,14 +22,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.          
 #
+# The current version of the Source Code can be found here:
+# https://github.com/alcrene/colored-noise
+#
 #                Copyright © 2023 Alexandre René
 # ###################################################################
 
 
-# %% [markdown] user_expressions=[]
+# %% [markdown] tags=["remove-cell"]
+# > **NOTE** Within Jupyter Lab, this notebook is best displayed with [`jupyterlab-myst`](https://myst-tools.org/docs/mystjs/quickstart-jupyter-lab-myst).
+
+# %% [markdown]
 # ## Basic principle
 
-# %% [markdown] user_expressions=[]
+# %% [markdown]
 # :::{note}
 # :class: margin
 # We are interested here in 1-d signals, but this algorithm generalizes easily to $n$-d. The $n$-d form is the one found in [(Lewis, 1989)](https://doi.org/10.1145/74333.74360).
@@ -56,7 +62,7 @@
 #
 # [^sparse-noise]: Contrast this with a standard scheme of generating white noise by drawing from a Gaussian with variance $Δt σ^2$: these generate noisy inputs $ξ_n$, which represent the integrals $\int_{nΔt}^{(n+1)Δt} ξ(t) dt$, but to generate an intermediate point for $ξ((n+\tfrac{1}{2})Δt)$, one needs to draw a new point: there is no deterministic rule to compute a dense $ξ(t)$ from a sparse set of $ξ_n$. One can of course interpolate the $ξ_n$, but the result has non-physical statistics: the autocovariance depends not just on the distance between points, but also on how they line up to the arbitrary grid of reference points $ξ_n$.
 
-# %% [markdown] user_expressions=[]
+# %% [markdown]
 # :::{admonition} Remark
 #
 # Assuming the derivatives of the kernel function are known, derivatives of the generated noise are also easy to evaluate:
@@ -65,7 +71,7 @@
 #
 # :::
 
-# %% [markdown] user_expressions=[]
+# %% [markdown]
 # :::{admonition} Notation
 # :class: hint, margin
 #
@@ -89,7 +95,7 @@
 # \end{align*}
 # which is why $γ$ is referred to as a sparse white noise.
 
-# %% [markdown] user_expressions=[]
+# %% [markdown]
 # In particular this means that the power spectrum of the autocorrelation $\braket{ξ(t)ξ(t')}$ is proportional to that of $h$:[^sloppy-power-spectrum][^mistake-in-Lewis]
 # \begin{align*}
 # S_{ξξ}(ω) &= S_{γγ}(ω) S_{hh}(ω) \\
@@ -105,7 +111,7 @@
 #
 # [^mistake-in-Lewis]: In Lewis this is given as $S_{y}(ω) = S_x(ω) \lvert H(jω)\rvert^2$, with $S_y = S_{ξξ}$, $S_x = S_{γγ}$, $j = i$ and $H$ the Fourier transform of $h$. As far as I can tell the presence of the imaginary factor $j$ is a mistake: at least in the case where the Fourier transform of $γ$ exists, it does not appear (see above footnote). Possibly this is due to the fact that in the study of LTI (linear time-invariant) systems, often the *Laplace* transform of a kernel $h$ is written $H$; then the Fourier transform is written $H(iω)$ (or $H(jω)$ in engineering notation). See e.g. [here](https://en.wikipedia.org/wiki/Linear_time-invariant_system#Fourier_and_Laplace_transforms).
 
-# %% [markdown] user_expressions=[]
+# %% [markdown]
 # To get the correlation function, we can use the Wiener-Khinchine theorem: applying the inverse Fourier transform to $S_{ξξ}$ will yield the autocorrelation:
 # \begin{equation}
 # C_{ξξ}(t) = \Bigl\langle{ξ(t)ξ(t+s)\Bigr\rangle} = \frac{ρ\braket{a^2}}{\sqrt{2π}} \mathcal{F}^{-1}\bigl\{\,\lvert\tilde{h}\rvert^2 \,\bigr\} \,.
@@ -114,13 +120,19 @@
 # Perhaps the most obvious one is a Gaussian kernel; then $h(s)$, $\tilde{h}(ω)$, $|\tilde{h}(ω)|$ and $C_{ξξ}(s)$ are all Gaussian.
 # Another one would be a boxcar kernel. In general, if we have a function $\tilde{h}(ω)$ for which the Fourier transforms of both $\tilde{h}(ω)$ and $|\tilde{h}(ω)|^2$ are known, then it is possible to select the kernel given the desired autocorrelation length.
 
-# %% [markdown] user_expressions=[]
-# :::{admonition} Possible extensions
+# %% [markdown]
+# :::{admonition} Possible further work
 # :class: dropdown
 #
-# One simple extension would be to allow online generation of noise samples: the current implementation requires to pre-specify `t_min` and `t_max`, but this is only for convenience and because it was natural to do so in my use cases. Some ideas:
+# Perhaps the highest value extension would be to support specify multivariate output with specified cross-correlation.
+#
+# Another usability improvement would be to support arithmetic between functions, so that e.g. noises with different correlation times can be added together into one noise function. Possibly we could achieve this just by making our noise a subclass of [`scityping.PureFunction`](https://github.com/alcrene/scityping/blob/cc760c9ab009b419f90442a2c3ce24fd272fd945/scityping/functions.py#L276).
+#
+# We could also allow online generation of noise samples: the current implementation requires to pre-specify `t_min` and `t_max`, but this is only for convenience and because it was natural to do so in my use cases. Some ideas:
 # - Store impulse times and weights in a cyclic buffer, allowing for infinite generation forward in time.
 # - Design a scheme which assigns to each bin a unique seed, computed from $t$. When a time is requested, generate the required impulses and compute the noise value. This would allow random access on an infinite time vector. With suitable caching, it could also be used for a generator which allows infinite iteration both forward *and* backward in time.
+#
+# On the theoretical side, it would be useful to analytically characterize the effect of the impulse density parameter $ρ$. This would give more accurate guidance in choosing an appropriate value for that parameter.
 #
 # Another extension would be to add support for more kernels.
 # One kernel that may be desirable is the exponential, $h(s) = e^{-|s|/τ}$, since often we think of correlation length as the scale of an exponential decay. We find then that $\tilde{h}(ω)$ should be a Lorentz distribution, for which unfortunately $C_{ξξ}(s) = \mathcal{F}^{-1}\bigl\{\,|\tilde{h}(ω)|^2\,\}$ does not Fourier transform easily.[^no-Lorentz-kernel] However, numerical experiments suggest that $C_{ξξ}(s)$ looks an awful lot like a Lorentz distribution – perhaps a suitable approximation could formalize the correspondence. A Lorentzian autocorrelation would be an interesting complement to the Gaussian since it has very different satistics (in particular very heavy tails), and is a frequent alternative to the Gaussian is many applications.
@@ -141,7 +153,7 @@
 # [^no-Lorentz-kernel]: Interestingly, using a Lorentz kernel instead *does* result in a fully solvable set of equations. Unfortunately, the resulting noise does not look like one would expect, and its statistics don’t converge (at least not within a reasonable amount of time). Which isn’t so surprising given the number of pathologies associated to the Lorentz distribution (infinite variance, undefined mean…)
 # :::
 
-# %% [markdown] user_expressions=[]
+# %% [markdown]
 # :::{admonition} Summary
 # :class: important
 #
@@ -149,7 +161,7 @@
 # - This constant is proportional to the variance of the weights $a$.
 # :::
 
-# %% [markdown] user_expressions=[]
+# %% [markdown]
 # ## Comparison with other methods
 #
 # ::::{grid} 1 1 2 2
@@ -198,8 +210,36 @@
 #
 # ::::
 
-# %% [markdown] user_expressions=[]
+# %% [markdown]
 # ## Implementation
+
+# %% [markdown]
+# :::{note} JAX compatibility
+# :class: margin
+#
+# The `__call__` method below is coded such that it can be used inside a
+# jitted JAX function. Since `jax.numpy` is already 99% compatible
+# with NumPy, mostly this means using `jnp` instead of `np`.
+# The main exception is slicing: we need to slice based on a computed index,
+# which `jax.numpy` arrays do not support (they only support static indices.)
+# For this we use the lower-level `lax.dynamic_slice`.
+#
+# The benefit of supporting JAX is mostly when the noise output is used within
+# a larger, more costly function. Being JAX-compatible means we allow that
+# entire function to be jitted. 
+# When used on its own, the noise generator is fast enough that in most cases it
+# probably does not benefit from JIT compilation. Therefore we don't want to force
+# a dependency on JAX. We achieve this by defining a few fallbacks:
+# - All calls to `jnp` are redirected to `np`.
+# - We define `lax.dynamic_slice` to redirect to normal NumPy slicing.
+#
+# In practice, if JAX is installed, JAX arrays and operations are used when
+# evaluating the noise. Otherwise NumPy arays and operations are used.
+# **In particular, this means that if the `jax` library is installed, then
+# results are returned as JAX arrays – even if all arguments are NumPy arrays.**
+# Presumably a user who has already installed JAX should know to cast results
+# back to NumPy arrays if needed.
+# :::
 
 # %%
 from collections.abc import Callable
@@ -209,14 +249,24 @@ from typing import Union
 import math
 import numpy as np
 import numpy.random as random
-import scipy.stats as stats
+from numpy.typing import ArrayLike
+try:
+    import jax.numpy as jnp
+    import jax.lax as lax
+except ImportError:
+    jnp = np
+    class lax:
+        @staticmethod
+        def dynamic_slice(operand, start_indices, slice_sizes):
+            slcs = tuple(slice(i,i+l) for i, l in zip(start_indices, slice_sizes))
+            return operand[slcs]
 
 __all__ = ["ColoredNoise"]
 
-# %% [markdown] user_expressions=[]
+# %% [markdown]
 # One small complication with the definition in Eq. {eq}`eq_Poisson-noise_no-bins` for the Poisson noise is that for a given $t$, we don’t know which $t_k$ are near enough to contribute. And for a long time trace, we definitely don’t want to sum tens of thousands of impulses at every $t$, when only a few dozen contribute. So following [Lewis (1989)](https://doi.org/10.1145/74333.74360), we split the time range into bins and generate the same number of impulses within each bin. Then for any $t$ we can compute with simple arithmetic the bin which contains it, and sum only over neighbouring bins.
 
-# %% [markdown] user_expressions=[]
+# %% [markdown]
 # ### `ColoredNoise`
 #
 # The default `ColoredNoise` class produces noise with a Gaussian kernel, Gaussian weights $a$, and a Gaussian autocorrelation:
@@ -242,11 +292,43 @@ __all__ = ["ColoredNoise"]
 # ~ *Bin size:* $τ$
 # ~ *Summation:* 5 bins left and right of $t$ (so a total of 11 bins)
 
-# %% [markdown] user_expressions=[]
+# %% [markdown]
 # :::{admonition} TODO
 # :class: warning, margin
 #
 # Recheck calculations for the coefficient of the `autocorr` function and the std. dev. of the $a$ weights. Add expression for $S_ξξ$.
+# :::
+
+# %% [markdown]
+# :::{note}
+# :class: margin
+#
+# “non-factored” refers to an previous implementation where all operations in `__call__` were performed with united values, instead of factoring out the units as `_t_unit` and `_ξ_unit` attributes and only adding them at the end.
+# :::
+#
+# :::{list-table} Anecdotal timings ($t$ scalar, $ξ$ scalar)
+# :header-rows: 1
+# :stub-columns: 1
+#
+# * -
+#   - $ρ=10$
+#   - $ρ=30$
+#   - $ρ=100$ 
+#   - $ρ=400$
+#   - $ρ=1000$
+# * - Intel Xeon W-2265, 3.50GHz  
+#     No units
+#   - 9.2 ± 0.06 μs
+#   - 10.2 ± 0.08 μs
+#   - 12.3 ± 0.07 μs
+#   - 19.0 ± 0.11 μs
+#   - 32.1 ± 0.45 μs
+# * - Intel Xeon W-2265, 3.50GHz  
+#     With *pint* units, non-factored
+#   - 270 ± 2.7 μs
+#   - 273 ± 1.6 μs
+#   - 290 ± 3.0 μs
+#   - 311 ± 4.3 μs
 # :::
 
 # %%
@@ -267,86 +349,120 @@ class ColoredNoise:
     """
 
     # Inspection attributes (not uses when generating points)
-    σ: float
-    τ: float
+    _σ: float                                # Stored without units
+    _τ: float                                # Stored without units
     ρ: float
-    bin_edges: np.ndarray[float]
-    t_max: float
+    _bin_edges: np.ndarray[float]
+    _t_max: float                            # Stored without units
     rng: np.random.Generator
+    _t_unit: Union[int, "pint.Quantity"]
+    _ξ_unit: Union[int, "pint.Quantity"]
     # Attributes used when generating noise
-    t_min: float
-    λ: float
-    t_arr: np.ndarray[float]
-    a_arr: np.ndarray[float]
+    _t_min: float                            # Stored without units
+    _λ: float                                # Stored without units
+    _t_arr: np.ndarray[float]                # Stored without units
+    _a_arr: np.ndarray[float]                # Stored without units
+    
     
     def __init__(self,
                  t_min:float, t_max:float,
-                 scale: float, corr_time: float,
-                 #weight_std: float,
+                 scale: ArrayLike, corr_time: float,
                  impulse_density: int,
                  rng: Union[int,random.Generator,random.SeedSequence,None]=None):
         """
+        Multivariate outputs can be generated by passing an array of appropriate shape
+        as the `scale` parameter. Each component is uncorrelated with the others, so
+        this is equivalent (but faster) to generating N independent noise sources.
+        
         Parameters
         ----------
-        scale: (σ) Standard deviation of the generated noise
+        scale: (σ) Standard deviation of the generated noise.
+            The shape of `scale` determines the shape of the output.
         corr_time: Correlation time (τ). If the kernel is given by :math:`e^{-λ|τ|}`,
             this is :math:`τ`.
         impulse_density: (ρ) The expected number of impulses within one correlation
             time of a test time.
         rng: Either a random seed, or an already instantiated NumPy random `Generator`.
         """
+        ### Convention: '_' prefix means without units
+        
         rng = random.default_rng(rng)
         
+        self._t_unit = getattr(corr_time, "units", 1);
+        self._ξ_unit = getattr(scale, "units", 1);
+        
         # Compute the std dev for the weights
-        σ, τ, ρ = scale, corr_time, impulse_density
-        a_std = σ * np.sqrt(1/ρ) * (2/np.pi)**(0.25)
+        _σ = jnp.asarray(getattr(scale, "magnitude", scale))
+        τ, ρ = corr_time, impulse_density
+        _a_std = _σ * jnp.sqrt(1/ρ) * (2/np.pi)**(0.25)
+        
+        # Ensure τ is in the same units as t_arr
+        if hasattr(τ, "units"):
+            if not hasattr(t_min, "units") or not hasattr(t_max, "units"):
+                raise ValueError("If `corr_time` is specified with units, then also `t_min` and `t_max` must have units.")
+            t_min = t_min.to(τ.units)
+            t_max = t_max.to(τ.units)
+            
+        # Define unitless vars
+        _t_min = getattr(t_min, "magnitude", t_min)
+        _t_max = getattr(t_max, "magnitude", t_max)
+        _τ = getattr(τ, "magnitude", τ)
         
         # Discretize time range into bins of length τ
         # Following Lewis, we draw the impulses in bins.
         # Each bin has exactly the same number of impulses, allowing us in __call__ to
         # efficiently restrict ourselves to nearby points.
         # NB: We always take 5 bins to the left and right, so we also pad that many bins.
-        Nbins = math.ceil((t_max - t_min) / τ) + 10
-        self_t_min = t_min - 5*τ
-        self_t_max = self_t_min + (Nbins+1)*τ
+        Nbins = math.ceil((_t_max - _t_min) / _τ) + 10
+        _self_t_min = _t_min - 5*_τ
+        #_self_t_max = self_t_min + (Nbins+1)*_τ
             
         # Draw the impulse times
-        # Each row corresponds to the impulses in one bin
-        bin_edges = np.arange(Nbins+1) * τ + self_t_min
-        if hasattr(bin_edges, "units"):  # Assume values were provided with pint units:
-            t_units = bin_edges.units
-            _bin_edges = bin_edges.magnitude
-        else:
-            t_units = 1
-            _bin_edges = bin_edges
-        t_arr = rng.uniform(_bin_edges[:-1,np.newaxis], _bin_edges[1:,np.newaxis],
-                            size=(Nbins, impulse_density)
-                           ) * t_units
+        # First axis: bins
+        # Second axis: impulses in that bin
+        # All subsequent axes: shape of σ (and of output)
+        _bin_edges = np.arange(Nbins+1) * _τ + _self_t_min  # We use all dimensionless variables here
+        a_axes = (np.newaxis,)*_σ.ndim
+        impulse_data_shape = (Nbins, impulse_density, *_σ.shape)
+        _t_arr = rng.uniform(_bin_edges[(slice(None,-1),np.newaxis,*a_axes)], _bin_edges[(slice(1,None),np.newaxis,*a_axes)],
+                             size=impulse_data_shape
+                            )
         
         # Draw the weights
-        a_arr = rng.normal(0, 1, t_arr.shape) * a_std
+        _a_arr = rng.normal(0, _a_std, impulse_data_shape)
         
         # Store attributes
-        self.σ = σ
-        self.τ = τ
+        self._σ = _σ
+        assert self._σ.shape == np.shape(_a_std)
+        self._τ = _τ
         self.ρ = ρ
-        self.λ = 1/τ  # With floating point numbers, multiplication is faster than division
+        self._λ = 1/self._τ  # With floating point numbers, multiplication is faster than division
         self.rng = rng
-        self.bin_edges = bin_edges
-        self.t_min = t_min
-        self.t_max = t_max
-        self.t_arr = t_arr
-        self.a_arr = a_arr
+        self._bin_edges = _bin_edges
+        self._t_min = _t_min
+        self._t_max = _t_max
+        self._t_arr = _t_arr
+        self._a_arr = _a_arr
         
-    def __call__(self, t, *, pad=5, exp=np.exp, int32=np.int32):
+        # Precomputed window sizes
+        pad=5
+        self._bin_t_size = (2*pad+1, _t_arr.shape[1])
+        self._bin_data_start = (0,)*_σ.ndim
+        
+    def __call__(self, t, *, pad=5, exp=jnp.exp, int32=jnp.int32):
         # Compute the index of the bin containing t
-        i = (t-self.t_min) * self.λ; i = getattr(i, "magnitude", i)  # Suppress Pint warning that int32 removes dim
+        if hasattr(t, "units"):
+            t = t.to(self._t_unit).magnitude
+        i = (t-self._t_min) * self._λ; i = getattr(i, "magnitude", i)  # Suppress Pint warning that int32 removes dim
         i = int32(i) + pad
         # Compute the noise at t
-        tk = self.t_arr[i-pad:i+pad]
-        h = np.exp(-((t-tk)*self.λ)**2)  # Inlined from self.h
-        a = self.a_arr[i-pad:i+pad]
-        return (a * h).sum()
+        #tk = self.t_arr[i-pad:i+pad+1]
+        #a = self.a_arr[i-pad:i+pad+1]
+        size = self._bin_t_size + self._σ.shape
+        tk = lax.dynamic_slice(self._t_arr, (i-pad, 0) + (0,)*self.σ.ndim, size)
+        a  = lax.dynamic_slice(self._a_arr, (i-pad, 0) + (0,)*self.σ.ndim, size)
+        h = exp(-((t-tk)*self._λ)**2)  # Inlined from self.h
+        return (a * h).sum(axis=(0,1)) * self._ξ_unit   # The first two dimensions are time. Extra dimensions are data dimensions, which we want to keep
     
     def new(self, **kwargs):
         """
@@ -368,6 +484,31 @@ class ColoredNoise:
         return self.σ**2 * np.exp(-0.5*(s*self.λ)**2)
     
     @property
+    def t_arr(self):
+        return self._t_arr * self._t_unit
+    @property
+    def t_min(self):
+        return self._t_min * self._t_unit
+    @property
+    def t_max(self):
+        return self._t_max * self._t_unit
+    @property
+    def a_arr(self):
+        return self._a_arr * self._ξ_unit
+    @property
+    def τ(self):
+        return self._τ * self._t_unit
+    @property
+    def λ(self):
+        return 1 / self.τ
+    @property
+    def σ(self):
+        return self._σ * self._ξ_unit
+    @property
+    def bin_edges(self):
+        return self._bin_edges * self._t_unit
+    
+    @property
     def T(self):
         return self.t_max - self.t_min
     
@@ -382,7 +523,7 @@ class ColoredNoise:
         """Return the number of bins, excluding those included for padding."""
         return len(self.t_arr) - self.Nleftpadbins - self.Nrightpadbins
 
-# %% [markdown] user_expressions=[]
+# %% [markdown]
 # ## Validation
 
 # %% tags=["active-ipynb", "hide-input"]
@@ -412,10 +553,13 @@ class ColoredNoise:
 # )
 # colors = hv.Cycle("Dark2").values
 
+# %% [markdown]
+# Scale with units
+
 # %% tags=["active-ipynb"]
 # noise = ColoredNoise(t_min=0.    *ureg.ms,
 #                      t_max=10.   *ureg.ms,
-#                      scale=2.2   *ureg.ms**0.5,
+#                      scale=2.2   *ureg.mV,
 #                      corr_time=1.*ureg.ms,
 #                      impulse_density=30,
 #                      rng=1337)
@@ -423,6 +567,44 @@ class ColoredNoise:
 # expected_bin_edges = np.array([-5., -4., -3., -2., -1.,  0.,  1.,  2.,  3.,  4.,  5., 
 #                                6.,  7., 8.,  9., 10., 11., 12., 13., 14., 15.])*ureg.ms
 # assert np.allclose(noise.bin_edges, expected_bin_edges)
+# noise(1.)
+
+# %% [markdown]
+# Scalar output
+
+# %% tags=["active-ipynb"]
+# noise = ColoredNoise(t_min=0.    *ureg.ms,
+#                      t_max=1000. *ureg.ms,
+#                      scale=2.2,
+#                      corr_time=1.*ureg.ms,
+#                      impulse_density=30)
+# ξ = np.array([noise(t) for t in np.linspace(noise.t_min, noise.t_max, 1000)])
+# ξ.std(axis=0)
+
+# %% [markdown]
+# 1d output
+
+# %% tags=["active-ipynb"]
+# noise = ColoredNoise(t_min=0.        *ureg.ms,
+#                      t_max=1000.     *ureg.ms,
+#                      scale=np.array([2.2, 1.1]),
+#                      corr_time=1.    *ureg.ms,
+#                      impulse_density=30)
+# ξ = np.array([noise(t) for t in np.linspace(noise.t_min, noise.t_max, 1000)])
+# ξ.std(axis=0)
+
+# %% [markdown]
+# 2d output
+
+# %% tags=["active-ipynb"]
+# noise = ColoredNoise(t_min=0.          *ureg.ms,
+#                      t_max=1000.       *ureg.ms,
+#                      scale=[[2.2, 1.1],
+#                             [3.3, 4.4]],
+#                      corr_time=1.      *ureg.ms,
+#                      impulse_density=30)
+# ξ = np.array([noise(t) for t in np.linspace(noise.t_min, noise.t_max, 1000)])
+# ξ.std(axis=0)
 
 # %% tags=["remove-cell", "active-ipynb"]
 # N = 1000
@@ -446,11 +628,11 @@ class ColoredNoise:
 # %% tags=["active-ipynb"]
 # n_realizations_shown = 10
 # seedseq = np.random.SeedSequence(6168912654954)
-# Tlst = [100.]
+# Tlst = [50.]
 # σlst = [0.33, 1., 9.]
 # τlst = [1., 5., 25.]
 # ρlst = [1, 5, 30, 200]
-# Nlst = [100]
+# Nlst = [20]
 # exp_conds = list(itertools.product(Tlst, σlst, τlst, ρlst, Nlst))
 
 # %% tags=["active-ipynb"]
@@ -458,7 +640,7 @@ class ColoredNoise:
 # frames_autocorr = {}
 # ms = ureg.ms
 
-# %% [markdown] user_expressions=[]
+# %% [markdown]
 # :::{admonition} Computing correlations with `scipy.signal`
 # :class: caution, margin, dropdown
 #
@@ -475,7 +657,7 @@ class ColoredNoise:
 # \end{equation}
 # :::
 
-# %% [markdown] user_expressions=[]
+# %% [markdown]
 #
 
 # %% tags=["active-ipynb", "hide-input"]
@@ -484,8 +666,8 @@ class ColoredNoise:
 #     if (T, σ, τ, ρ, N) in (frames_realizations.keys() & frames_autocorr.keys())  :
 #         continue
 #     
-#     noise = ColoredNoise(0*ms, T*ms, scale=σ, corr_time=τ*ms, impulse_density=ρ, rng=seedseq)
-#     t_arr = np.linspace(noise.t_min, noise.t_max, int(10*T*ms/noise.τ))
+#     noise = ColoredNoise(0, T, scale=σ, corr_time=τ, impulse_density=ρ, rng=seedseq)
+#     t_arr = np.linspace(noise.t_min, noise.t_max, int(10*T/noise.τ))
 #
 #     ## Generate the realizations and compute their autocorrelation ##
 #     L = len(t_arr)
@@ -504,17 +686,17 @@ class ColoredNoise:
 #
 #     ## Generator realization curves ##
 #     realization_samples = hv.Overlay([
-#         hv.Curve(zip(t_arr.magnitude, _ξ), kdims=dims.t, vdims=dims.ξ, label="Single realization")
+#         hv.Curve(zip(t_arr, _ξ), kdims=dims.t, vdims=dims.ξ, label="Single realization")
 #         for _ξ in ξ_arr[:n_realizations_shown]
 #     ])
 #     
 #     ## Generate autocorr curves ##
 #     autocorr_samples = hv.Overlay([
-#         hv.Curve(zip(lags.magnitude, _Cξ), kdims=dims.Δt, vdims=dims.ξ2, label="Single realization")
+#         hv.Curve(zip(lags, _Cξ), kdims=dims.Δt, vdims=dims.ξ2, label="Single realization")
 #         for _Cξ in Cξ_arr[:n_realizations_shown]]
 #     )
-#     avg =  hv.Curve(zip(lags.magnitude, Cξ), kdims=dims.Δt, vdims=dims.ξ2, label=f"Average ({N} realizations)")
-#     target = hv.Curve(zip(lags.magnitude, noise.autocorr(lags).magnitude), kdims=dims.Δt, vdims=dims.ξ2, label="Theoretical")
+#     avg =  hv.Curve(zip(lags, Cξ), kdims=dims.Δt, vdims=dims.ξ2, label=f"Average ({N} realizations)")
+#     target = hv.Curve(zip(lags, noise.autocorr(lags)), kdims=dims.Δt, vdims=dims.ξ2, label="Theoretical")
 #     
 #     ## Compute axis range so it is appropriate for mean and target autocorr – individual realizations may be well outside this range ##
 #     ymax = max(avg.range("ξ2")[1], target.range("ξ2")[0])

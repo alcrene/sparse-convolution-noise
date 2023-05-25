@@ -1,7 +1,7 @@
 numpy >= 1.21   # numpy.typing.NDArray
-scipy
 
 # ## Docs ##
+# scipy
 # holoviews
 # pint
 # myst_nb

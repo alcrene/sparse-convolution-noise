@@ -32,6 +32,19 @@ Conveniently, because the produced noise is dense, it can even be used in integr
 
 The `noise` object has a few convenience methods, most notably `autocorr` which evaluates the theoretical autocorrelation.
 
+## Package compatibility
+
+### Pint compatibility
+
+Noise parameters can be specified with [Pint](https://pint.readthedocs.io) units, which can be an effective way to validate calculations. This does add measurable overhead (it is about 15x slower per call), so for performance-critical code, one will see significant speed-up by switching to plain NumPy arrays.
+
+(Note that `pint`'s overhead is not *that* large. So the fact that we see such a large speed-up is more a reflection of the efficiency with which the sparse convolution algorithm can be implemented.)
+
+### JAX compatibility
+
+If [JAX](https://jax.readthedocs.io) is installed, `ColoredNoise` will use JAX arrays and operations it its noise generation call. This allows it to be jitted with `jax.jit`.
+Jitting the noise generator on its own does not provide much benefit (it is already quite efficient), but this allows it to be used within a larger function, and still jit that entire function. This is useful for example to compile the equations of an ODE system to integrate.
+
 ## Installation
 
 - **Direct copy**
@@ -74,8 +87,9 @@ The `noise` object has a few convenience methods, most notably `autocorr` which 
 
 ## Dependencies
 
-The only dependencies are [NumPy](https://numpy.org) and [SciPy](https://scipy.org). If you want to build the docs yourself, they you also need:
+The only dependencies are [NumPy](https://numpy.org). If you want to build the docs yourself, they you also need:
 
+- [SciPy](https://scipy.org)
 - [holoviews](https://holoviews.org/)
 - [pint](https://pint.readthedocs.io)
 - [jupytext]()

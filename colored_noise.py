@@ -6,14 +6,14 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.15.0
 #   kernelspec:
-#     display_name: Python (EMD paper)
+#     display_name: Python (emd-paper)
 #     language: python
 #     name: emd-paper
 # ---
 
-# %% [markdown]
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Using sparse convolutions to generate noisy inputs
 
 # %% [raw] tags=["remove-cell"]
@@ -124,31 +124,40 @@
 # :::{admonition} Possible further work
 # :class: dropdown
 #
-# Perhaps the highest value extension would be to support specify multivariate output with specified cross-correlation.
+# **Usability**
 #
-# Another usability improvement would be to support arithmetic between functions, so that e.g. noises with different correlation times can be added together into one noise function. Possibly we could achieve this just by making our noise a subclass of [`scityping.PureFunction`](https://github.com/alcrene/scityping/blob/cc760c9ab009b419f90442a2c3ce24fd272fd945/scityping/functions.py#L276).
+# - *Support for function arithmetic,* so that e.g. noises with different correlation times can be added together into one noise function. Possibly we could achieve this just by making our noise a subclass of [`scityping.PureFunction`](https://github.com/alcrene/scityping/blob/cc760c9ab009b419f90442a2c3ce24fd272fd945/scityping/functions.py#L276). Some considerations:
+#   - Adding a bias seems like an obvious use case. In this case, the autocovariance and autocorrelation (which are no longer the same) can be trivially obtained from the autocorrelation of the original unbiased noise. Should the returned object then still proved statistics and methods, like the autocorrelation time `.τ` and the autocorrelation function `.autocorr` ? (If so, we should probably add a `.autocov` method.)
 #
-# We could also allow online generation of noise samples: the current implementation requires to pre-specify `t_min` and `t_max`, but this is only for convenience and because it was natural to do so in my use cases. Some ideas:
-# - Store impulse times and weights in a cyclic buffer, allowing for infinite generation forward in time.
-# - Design a scheme which assigns to each bin a unique seed, computed from $t$. When a time is requested, generate the required impulses and compute the noise value. This would allow random access on an infinite time vector. With suitable caching, it could also be used for a generator which allows infinite iteration both forward *and* backward in time.
+# - *Allow online generation of noise samples:* the current implementation requires to pre-specify `t_min` and `t_max`, but this is only for convenience and because it was natural to do so in my use cases. Some ideas:
+#     - Store impulse times and weights in a cyclic buffer, allowing for infinite generation forward in time.
+#     - Design a scheme which assigns to each bin a unique seed, computed from $t$. When a time is requested, generate the required impulses and compute the noise value. This would allow random access on an infinite time vector. With suitable caching, it could also be used for a generator which allows infinite iteration both forward *and* backward in time.
 #
-# On the theoretical side, it would be useful to analytically characterize the effect of the impulse density parameter $ρ$. This would give more accurate guidance in choosing an appropriate value for that parameter.
+# **Functionality**
 #
-# Another extension would be to add support for more kernels.
-# One kernel that may be desirable is the exponential, $h(s) = e^{-|s|/τ}$, since often we think of correlation length as the scale of an exponential decay. We find then that $\tilde{h}(ω)$ should be a Lorentz distribution, for which unfortunately $C_{ξξ}(s) = \mathcal{F}^{-1}\bigl\{\,|\tilde{h}(ω)|^2\,\}$ does not Fourier transform easily.[^no-Lorentz-kernel] However, numerical experiments suggest that $C_{ξξ}(s)$ looks an awful lot like a Lorentz distribution – perhaps a suitable approximation could formalize the correspondence. A Lorentzian autocorrelation would be an interesting complement to the Gaussian since it has very different satistics (in particular very heavy tails), and is a frequent alternative to the Gaussian is many applications.
+# - *Support for multivariate output with specified cross-correlation.* (Currently only multivariate output with independent components is supported.)
 #
-# Going more general, one could envision implementing a generic class which can approximate an arbitrary autocorrelation, by using FFT to compute the kernel $h$:
-# \begin{equation*}
-# \begin{CD}
-# S_{ξξ}(ω) = |\tilde{h}(ω)|^2 @>{\sqrt{}}>>  h(ω)   \\
-# @AA{\mathcal{F}}A                 @VV{\mathcal{F}^{-1}}V  \\
-# C_{ξξ}(s)                    @.        h(s)  @>\text{smooth}>>  \bar{h}(s)
-# \end{CD}
-# \end{equation*}
-# This might have a few advantages over the more common approach of sampling Fourier coefficients:
-# - While sampled spectra are by design non-smooth (or even non-continuous), here both the original function ($C_{ξξ}$) and the estimate ($h$) are functions of time. It is therefore more reasonable to apply smoothing, which might help remove artifacts introduced by the FFT.
-# - Because we are estimating a *kernel* with FFT, and not the signal itself, we can still generate noise signals of arbitrary length and in an online fashion.
-# - Once computed over discretized time, the estimated kernel $h$ could be replaced by something like a spline, making dense evaluation reasonably cheap.
+# - *Support for more kernels.* One kernel that may be desirable is the exponential, $h(s) = e^{-|s|/τ}$, since often we think of correlation length as the scale of an exponential decay. We find then that $\tilde{h}(ω)$ should be a Lorentz distribution, for which unfortunately $C_{ξξ}(s) = \mathcal{F}^{-1}\bigl\{\,|\tilde{h}(ω)|^2\,\}$ does not Fourier transform easily.[^no-Lorentz-kernel] However, numerical experiments suggest that $C_{ξξ}(s)$ looks an awful lot like a Lorentz distribution – perhaps a suitable approximation could formalize the correspondence. A Lorentzian autocorrelation would be an interesting complement to the Gaussian since it has very different satistics (in particular very heavy tails), and is a frequent alternative to the Gaussian is many applications.
+#
+# - *Support for arbitrary autocorrelation,* by using FFT to compute the kernel $h$:
+#   \begin{equation*}
+#     \begin{CD}
+#     S_{ξξ}(ω) = |\tilde{h}(ω)|^2 @>{\sqrt{}}>>  h(ω)   \\
+#     @AA{\mathcal{F}}A                 @VV{\mathcal{F}^{-1}}V  \\
+#     C_{ξξ}(s)                    @.        h(s)  @>\text{smooth}>>  \bar{h}(s)
+#     \end{CD}
+#   \end{equation*}
+#   This would not be as fast or exact as a class tailored to a specific kernel, but might still have a few advantages over the more common approach of sampling Fourier coefficients:
+#     - While sampled spectra are by design non-smooth (or even non-continuous), here both the original function ($C_{ξξ}$) and the estimate ($h$) are functions of time. It is therefore more reasonable to apply smoothing, which might help remove artifacts introduced by the FFT.
+#     - Because we are estimating a *kernel* with FFT, and not the signal itself, we can still generate noise signals of arbitrary length and in an online fashion.
+#     - Once computed over discretized time, the estimated kernel $h$ could be replaced by something like a spline, making dense evaluation reasonably cheap.
+#     
+# - *Support for arbitary spectra.* This is the same as above, except that we specify $S_{ξξ}(ω)$ instead of $C_{ξξ}$.
+#
+# **Theoretical**
+#
+# - *Analytically characterize the effect of the impulse density parameter $ρ$.* This would give more accurate guidance in choosing an appropriate value for that parameter.
+#
 #
 # [^no-Lorentz-kernel]: Interestingly, using a Lorentz kernel instead *does* result in a fully solvable set of equations. Unfortunately, the resulting noise does not look like one would expect, and its statistics don’t converge (at least not within a reasonable amount of time). Which isn’t so surprising given the number of pathologies associated to the Lorentz distribution (infinite variance, undefined mean…)
 # :::
@@ -214,8 +223,8 @@
 # ## Implementation
 
 # %% [markdown]
-# :::{note} JAX compatibility
-# :class: margin
+# :::{admonition} Important note for JAX users
+# :class: important dropdown
 #
 # The `__call__` method below is coded such that it can be used inside a
 # jitted JAX function. Since `jax.numpy` is already 99% compatible
@@ -229,23 +238,25 @@
 # entire function to be jitted. 
 # When used on its own, the noise generator is fast enough that in most cases it
 # probably does not benefit from JIT compilation. Therefore we don't want to force
-# a dependency on JAX. We achieve this by defining a few fallbacks:
+# a dependency on JAX. We achieve this by defining a few fallbacks in the
+# `except ImportError` branch below, which is executed when JAX is not installed:
 # - All calls to `jnp` are redirected to `np`.
 # - We define `lax.dynamic_slice` to redirect to normal NumPy slicing.
 #
 # In practice, if JAX is installed, JAX arrays and operations are used when
-# evaluating the noise. Otherwise NumPy arays and operations are used.
-# **In particular, this means that if the `jax` library is installed, then
-# results are returned as JAX arrays – even if all arguments are NumPy arrays.**
-# Presumably a user who has already installed JAX should know to cast results
-# back to NumPy arrays if needed.
+# evaluating the noise; otherwise NumPy arays and operations are used.
+# **In particular, this means that when the `jax` library is installed, results
+# are always returned as JAX arrays – even if all arguments are NumPy arrays.**
+# We presume that a user who has already installed JAX should know to cast
+# results back to NumPy arrays if needed.
 # :::
 
-# %%
+# %% editable=true slideshow={"slide_type": ""}
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Union
 
+import copy
 import math
 import numpy as np
 import numpy.random as random
@@ -261,12 +272,36 @@ except ImportError:
             slcs = tuple(slice(i,i+l) for i, l in zip(start_indices, slice_sizes))
             return operand[slcs]
 
+# %% editable=true slideshow={"slide_type": ""}
+from scityping.pint import Quantity
+
+# %% tags=["hide-cell"] editable=true slideshow={"slide_type": ""}
+# Optional serialization dependencies with fallbacks
+# (If these are not available, the noise objects still work, they just
+# can’t be serialized.)
+try:
+    import pint
+except ImportError:
+    class pint:
+        class Quantity:
+            pass
+try:
+    from scityping import Serializable
+    from scityping.numpy import Array, RNGenerator
+    from scityping.pint import Quantity
+    from scityping.pydantic import BaseModel
+except ImportError:
+    Serializable = object
+    BaseModel = object
+    class Quantity:
+        pass
+
 __all__ = ["ColoredNoise"]
 
-# %% [markdown]
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # One small complication with the definition in Eq. {eq}`eq_Poisson-noise_no-bins` for the Poisson noise is that for a given $t$, we don’t know which $t_k$ are near enough to contribute. And for a long time trace, we definitely don’t want to sum tens of thousands of impulses at every $t$, when only a few dozen contribute. So following [Lewis (1989)](https://doi.org/10.1145/74333.74360), we split the time range into bins and generate the same number of impulses within each bin. Then for any $t$ we can compute with simple arithmetic the bin which contains it, and sum only over neighbouring bins.
 
-# %% [markdown]
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # ### `ColoredNoise`
 #
 # The default `ColoredNoise` class produces noise with a Gaussian kernel, Gaussian weights $a$, and a Gaussian autocorrelation:
@@ -279,31 +314,33 @@ __all__ = ["ColoredNoise"]
 #     Note that increasing $ρ$ does not cause the noise to wash out, but rather the effect saturates: Lewis reports that generated noises stop being distinguishable when $ρ$ is greater than 10. In my own tests I observe something similar, even though my implementation is quite different.
 #     Part of the reason for this is that we scale the variance of the $a_k$ to keep the overall variance of $ξ$ constant.
 #
+# :::{admonition} TODO
+# :class: warning margin
+#
+# Add expression for $S_{ξξ}$.
+# :::
+#
 # Autocorrelation
 # ~ $\displaystyle C_{ξξ}(s) = σ^2 e^{s^2/2τ^2}$
+# ~ Accessible as `.autocorr`
 #
 # Kernel
 # ~ $\displaystyle h(s) = e^{-s^2/τ^2}$
+# ~ Accessible as `.h`
 #
 # Weight distribution
 # ~ $\displaystyle a_k \sim \mathcal{N}\left(0, σ \sqrt{\frac{1}{ρ}\sqrt{\frac{2}{π}}} \right)$
+# ~ Pre-computed within `__init__`
 #
 # Binning
 # ~ *Bin size:* $τ$
 # ~ *Summation:* 5 bins left and right of $t$ (so a total of 11 bins)
 
-# %% [markdown]
-# :::{admonition} TODO
-# :class: warning, margin
-#
-# Recheck calculations for the coefficient of the `autocorr` function and the std. dev. of the $a$ weights. Add expression for $S_ξξ$.
-# :::
-
-# %% [markdown]
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # :::{note}
 # :class: margin
 #
-# “non-factored” refers to an previous implementation where all operations in `__call__` were performed with united values, instead of factoring out the units as `_t_unit` and `_ξ_unit` attributes and only adding them at the end.
+# “non-factored” refers to an previous implementation where all operations in `__call__` were performed with united values, instead of factoring out the units as `_t_unit` and `_ξ_unit` attributes and only adding them at the end. At the time I didn’t run the test with $ρ=1000$, which is why it is missing from the table.
 # :::
 #
 # :::{list-table} Anecdotal timings ($t$ scalar, $ξ$ scalar)
@@ -329,10 +366,22 @@ __all__ = ["ColoredNoise"]
 #   - 273 ± 1.6 μs
 #   - 290 ± 3.0 μs
 #   - 311 ± 4.3 μs
+#   -
 # :::
 
-# %%
-class ColoredNoise:
+# %% editable=true slideshow={"slide_type": ""} tags=["remove-cell"]
+def recreate_rng(rng_state: dict) -> np.random.Generator:
+    """Recreate a NumPy Generator from its bit_generator state.
+    
+    Ported from scityping.numpy.RNGenerator.
+    """
+    bg = getattr(np.random, rng_state["bit_generator"])()
+    bg.state = rng_state
+    return np.random.Generator(bg)
+
+
+# %% editable=true slideshow={"slide_type": ""}
+class ColoredNoise(Serializable):
     """
     Simplified solid noise with some predefined choices: exponential kernel :math:`h`
     and Gaussian weights :math:`a`. The specification parameters are the overall variance σ²,
@@ -354,9 +403,10 @@ class ColoredNoise:
     ρ: float
     _bin_edges: np.ndarray[float]
     _t_max: float                            # Stored without units
-    rng: np.random.Generator
-    _t_unit: Union[int, "pint.Quantity"]
-    _ξ_unit: Union[int, "pint.Quantity"]
+    # rng: np.random.Generator
+    _rng_state: "np.random.Generator->state"  # Restore with `recreate_rng`
+    _t_unit: Union[int, pint.Quantity]
+    _ξ_unit: Union[int, pint.Quantity]
     # Attributes used when generating noise
     _t_min: float                            # Stored without units
     _λ: float                                # Stored without units
@@ -365,8 +415,10 @@ class ColoredNoise:
     
     
     def __init__(self,
-                 t_min:float, t_max:float,
-                 scale: ArrayLike, corr_time: float,
+                 t_min    : Union[float,pint.Quantity],
+                 t_max    : Union[float,pint.Quantity],
+                 corr_time: Union[float,pint.Quantity],
+                 scale: ArrayLike, 
                  impulse_density: int,
                  rng: Union[int,random.Generator,random.SeedSequence,None]=None):
         """
@@ -376,17 +428,36 @@ class ColoredNoise:
         
         Parameters
         ----------
-        scale: (σ) Standard deviation of the generated noise.
-            The shape of `scale` determines the shape of the output.
+        t_min, t_max: Determine the window of time within which to generate noise.
+           The noise function can still be called outside this window, but decays
+           to zero the further we are from the window.
+           (Specifically, `t_min` and `t_max` determine the window of the underlying
+           Poisson noise process γ. We take care to extend the window sufficiently
+           so that the noise quality is the same from `t_min` to `t_max`.)
         corr_time: Correlation time (τ). If the kernel is given by :math:`e^{-λ|τ|}`,
-            this is :math:`τ`.
+           this is :math:`τ`.
+        scale: (σ) Standard deviation of the generated noise.
+           The shape of `scale` determines the shape of the output.
         impulse_density: (ρ) The expected number of impulses within one correlation
-            time of a test time.
+           time of a test time.
         rng: Either a random seed, or an already instantiated NumPy random `Generator`.
+
+        .. Note::
+           To specify units, use `pint.Quantities` objects for the parameters
+           `t_min`, `t_max`, `corr_time` and/or `scale`.
+
+           - `t_min`, `t_max` and `corr_time` determine the units of the input.
+             They must have matching units ('ms' and 's' is fine, but not 'ms' and 'km').
+           - `scale` determines the units of the output.
         """
         ### Convention: '_' prefix means without units
         
         rng = random.default_rng(rng)
+        if not isinstance(rng, np.random.Generator):
+            raise TypeError("Please use a `numpy.random.Generator` for the RNG, "
+                            f"or just specify a seed.\nReceived {type(rng)}.")
+        # Store the RNG state so the noise can be serialized & recreated
+        self._rng_state = rng.bit_generator.state
         
         self._t_unit = getattr(corr_time, "units", 1);
         self._ξ_unit = getattr(scale, "units", 1);
@@ -437,7 +508,7 @@ class ColoredNoise:
         self._τ = _τ
         self.ρ = ρ
         self._λ = 1/self._τ  # With floating point numbers, multiplication is faster than division
-        self.rng = rng
+        # self.rng = rng
         self._bin_edges = _bin_edges
         self._t_min = _t_min
         self._t_max = _t_max
@@ -459,21 +530,23 @@ class ColoredNoise:
         #tk = self.t_arr[i-pad:i+pad+1]
         #a = self.a_arr[i-pad:i+pad+1]
         size = self._bin_t_size + self._σ.shape
-        tk = lax.dynamic_slice(self._t_arr, (i-pad, 0) + (0,)*self.σ.ndim, size)
-        a  = lax.dynamic_slice(self._a_arr, (i-pad, 0) + (0,)*self.σ.ndim, size)
+        tk = lax.dynamic_slice(self._t_arr, (i-pad, int32(0)) + (0,)*self.σ.ndim, size)
+        a  = lax.dynamic_slice(self._a_arr, (i-pad, int32(0)) + (0,)*self.σ.ndim, size)
         h = exp(-((t-tk)*self._λ)**2)  # Inlined from self.h
         return (a * h).sum(axis=(0,1)) * self._ξ_unit   # The first two dimensions are time. Extra dimensions are data dimensions, which we want to keep
     
-    def new(self, **kwargs):
+    def new(self, rng=None, **kwargs):
+        """Create a new model, using the values of this one as defaults.
+        
+        NB: Unless specified, this uses the RNG returned by `np.random.default_rng()`.
+            This is independent of whether an RNG was given when creating the original
+            noise object. Use the `rng` keyword to control the state of the RNG, or
+            ensure that the noise is reproducible.
         """
-        Create a new model, using the values of this one as defaults.
-        NB: By default, this uses the same RNG as the original, but will produce new
-        times and weights (since it draws new points).
-        If you want to avoid advancing the state of the orignal RNG, provide a new one.
-        """
-        defaults = dict(t_min=self.t_min, t_max=self.t_max,
-                        scale=self.σ, corr_time=self.τ, impulse_density= self.ρ,
-                        rng=self.rng)
+        rng = np.random.default_rng(rng)
+        defaults = dict(t_min=self.t_min, t_max=self.t_max, corr_time=self.τ,
+                        scale=self.σ,
+                        impulse_density=self.ρ, rng=rng)
         return ColoredNoise(**(defaults | kwargs))
     
     def h(self, s):
@@ -481,8 +554,13 @@ class ColoredNoise:
     
     def autocorr(self, s):
         """Evaluate the theoretical autocorrelation at lag s."""
+        if not hasattr(s, "units"):
+            s = s * self._t_unit
         return self.σ**2 * np.exp(-0.5*(s*self.λ)**2)
     
+    @property
+    def impulse_density(self):
+        return self.ρ
     @property
     def t_arr(self):
         return self._t_arr * self._t_unit
@@ -499,11 +577,17 @@ class ColoredNoise:
     def τ(self):
         return self._τ * self._t_unit
     @property
+    def corr_time(self):
+        return self.τ
+    @property
     def λ(self):
         return 1 / self.τ
     @property
     def σ(self):
         return self._σ * self._ξ_unit
+    @property
+    def scale(self):
+        return self.σ
     @property
     def bin_edges(self):
         return self._bin_edges * self._t_unit
@@ -523,23 +607,98 @@ class ColoredNoise:
         """Return the number of bins, excluding those included for padding."""
         return len(self.t_arr) - self.Nleftpadbins - self.Nrightpadbins
 
-# %% [markdown]
-# ## Validation
+    def qty_to_mag(self, time=None, scale=None) -> "ColoredNoise":
+        """Convert dimensioned quantities to pure magnitudes.
 
-# %% tags=["active-ipynb", "hide-input"]
+        Useful to provide plain arrays to low-level functions, while still
+        using units for high-level functions.
+
+        The `time` and `scale` are used to specify into which units to convert
+        before retrieving the magnitude. For example, `scale` may have been
+        given meters, but the low-level function expects millimeters.
+        If these are not specified, then the current units are used.
+
+        If quantities are already without units, then they are silently ignored.
+        This is to allow functions to use `qty_to_mag` as a normalizer, when they
+        don’t know if their argument is dimensioned.
+        """
+        # Define `t_unit` and `ξ_unit` as dimensionless scaling factors
+        if isinstance(self._t_unit, (pint.Unit, pint.Quantity)):
+            if time is None:
+                t_unit = 1
+            else:
+                t_unit = (1*self._t_unit).to(time).m
+        else:
+            t_unit = 1
+        if isinstance(self._ξ_unit, (pint.Unit, pint.Quantity)):
+            if scale is None:
+                ξ_unit = 1
+            else:
+                ξ_unit = (1*self._ξ_unit).to(scale).m
+        else:
+            ξ_unit = 1
+        # Use the underlying dimensionless attributes, and multiply by scaling factors
+        return ColoredNoise(t_min    =self._t_min*t_unit,
+                            t_max    =self._t_max*t_unit,
+                            corr_time=self._τ    *t_unit,
+                            scale    =self._σ    *ξ_unit,
+                            impulse_density=self.impulse_density,
+                            rng      =recreate_rng(self._rng_state)
+        )
+
+    # __eq__ and __hash__are mostly implement to support caching
+    # with functools.lru_cache.
+
+    def __eq__(self, other):
+        return (type(self) == type(other)
+                and self.t_min == other.t_min
+                and self.t_max == other.t_max
+                and self.corr_time == other.corr_time
+                and self.scale == other.scale
+                and self.impulse_density == other.impulse_density
+                and self._rng_state == other._rng_state)
+    def __hash__(self):
+        # NB: self._σ may be a JAX variable => we need to convert to python scalar to make it hashable
+        return hash((self._t_min, self._t_max, self._τ, str(self._t_unit),
+                     float(self._σ), str(self._ξ_unit),
+                     self.ρ, str(self._rng_state)))
+
+    ## Scityping serializer ##
+    class Data(BaseModel):   # NB: Here we need to use the types from scityping
+        t_min    : Union[float,Quantity]
+        t_max    : Union[float,Quantity]
+        corr_time: Union[float,Quantity]
+        scale          : Union[Array,Quantity]
+        impulse_density: int
+        rng            : RNGenerator
+        @staticmethod
+        def encode(noise: "ColoredNoise"):
+            return (
+                noise.t_min, noise.t_max, noise.corr_time, noise.scale,
+                noise.impulse_density, recreate_rng(noise._rng_state))
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ## Validation of theoretical expressions
+
+# %% tags=["active-ipynb", "hide-input"] editable=true slideshow={"slide_type": ""}
 # import itertools
 # import scipy.signal as signal
 # import holoviews as hv
 # import pint
 # from types import SimpleNamespace
-# from tqdm.notebook import tqdm
 # from myst_nb import glue
 # ureg = pint.UnitRegistry()
 # ureg.default_format = "~P"
 # hv.extension("bokeh", "matplotlib")
 # %matplotlib inline
 
-# %% tags=["active-ipynb", "hide-input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove-cell", "active-ipynb"]
+# def tqdm(x, *args, **kwds): return x  # Remove progress bars when running with Jupyter Book
+
+# %% editable=true slideshow={"slide_type": ""} tags=["active-ipynb", "skip-execution"]
+# from tqdm.notebook import tqdm
+
+# %% tags=["active-ipynb", "hide-input"] editable=true slideshow={"slide_type": ""}
 # dims = SimpleNamespace(
 #     t  = hv.Dimension("t", label="time", unit="ms"),
 #     Δt = hv.Dimension("Δt", label="time lag", unit="ms"),
@@ -553,60 +712,7 @@ class ColoredNoise:
 # )
 # colors = hv.Cycle("Dark2").values
 
-# %% [markdown]
-# Scale with units
-
-# %% tags=["active-ipynb"]
-# noise = ColoredNoise(t_min=0.    *ureg.ms,
-#                      t_max=10.   *ureg.ms,
-#                      scale=2.2   *ureg.mV,
-#                      corr_time=1.*ureg.ms,
-#                      impulse_density=30,
-#                      rng=1337)
-# assert noise.Nbins == 10
-# expected_bin_edges = np.array([-5., -4., -3., -2., -1.,  0.,  1.,  2.,  3.,  4.,  5., 
-#                                6.,  7., 8.,  9., 10., 11., 12., 13., 14., 15.])*ureg.ms
-# assert np.allclose(noise.bin_edges, expected_bin_edges)
-# noise(1.)
-
-# %% [markdown]
-# Scalar output
-
-# %% tags=["active-ipynb"]
-# noise = ColoredNoise(t_min=0.    *ureg.ms,
-#                      t_max=1000. *ureg.ms,
-#                      scale=2.2,
-#                      corr_time=1.*ureg.ms,
-#                      impulse_density=30)
-# ξ = np.array([noise(t) for t in np.linspace(noise.t_min, noise.t_max, 1000)])
-# ξ.std(axis=0)
-
-# %% [markdown]
-# 1d output
-
-# %% tags=["active-ipynb"]
-# noise = ColoredNoise(t_min=0.        *ureg.ms,
-#                      t_max=1000.     *ureg.ms,
-#                      scale=np.array([2.2, 1.1]),
-#                      corr_time=1.    *ureg.ms,
-#                      impulse_density=30)
-# ξ = np.array([noise(t) for t in np.linspace(noise.t_min, noise.t_max, 1000)])
-# ξ.std(axis=0)
-
-# %% [markdown]
-# 2d output
-
-# %% tags=["active-ipynb"]
-# noise = ColoredNoise(t_min=0.          *ureg.ms,
-#                      t_max=1000.       *ureg.ms,
-#                      scale=[[2.2, 1.1],
-#                             [3.3, 4.4]],
-#                      corr_time=1.      *ureg.ms,
-#                      impulse_density=30)
-# ξ = np.array([noise(t) for t in np.linspace(noise.t_min, noise.t_max, 1000)])
-# ξ.std(axis=0)
-
-# %% tags=["remove-cell", "active-ipynb"]
+# %% tags=["remove-cell", "active-ipynb"] editable=true slideshow={"slide_type": ""}
 # N = 1000
 # _lags = signal.correlation_lags(N, N)
 # norm_autocorr = hv.Curve(zip(_lags, signal.correlate(np.ones(N), np.ones(N))),
@@ -625,7 +731,7 @@ class ColoredNoise:
 # norm_autocorr_fig = hv.render(norm_autocorr, backend="matplotlib")
 # glue("norm_autocorr", norm_autocorr_fig, display=True);
 
-# %% tags=["active-ipynb"]
+# %% tags=["active-ipynb", "remove-cell"] editable=true slideshow={"slide_type": ""}
 # n_realizations_shown = 10
 # seedseq = np.random.SeedSequence(6168912654954)
 # Tlst = [50.]
@@ -635,7 +741,7 @@ class ColoredNoise:
 # Nlst = [20]
 # exp_conds = list(itertools.product(Tlst, σlst, τlst, ρlst, Nlst))
 
-# %% tags=["active-ipynb"]
+# %% tags=["active-ipynb", "remove-cell"] editable=true slideshow={"slide_type": ""}
 # frames_realizations = {}
 # frames_autocorr = {}
 # ms = ureg.ms
@@ -648,7 +754,7 @@ class ColoredNoise:
 # \begin{equation}
 # C_k = \Braket{x_l x_{l+k}} = \sum_{l=0}^{N-1-k} x_l x_{l+k} \,.
 # \end{equation}
-# Note that the number of terms depends on $k$. We can see this clearly when computing the autocorrelation of the flat constant function $x_l = 1$: the result should also be flat (albeit dependent on $N$), but instead we get a triangular function peaking at zero:  
+# Note that the number of terms depends on $k$. We can see this clearly when computing the autocorrelation of the constant function $x_l = 1$: the result should be flat (albeit dependent on $N$), but instead we get a triangular function peaking at zero:  
 # {glue:}`norm_autocorr`  
 # where the value on the $y$ axis is exactly the number of terms contributing to that lag.
 # To avoid this artifical triangular decay, in the code we normalize the result by the number of terms contributing to each lag; in terms of a continuous time autocorrelation, this is equivalent to normalizing by the value at zero:
@@ -657,16 +763,16 @@ class ColoredNoise:
 # \end{equation}
 # :::
 
-# %% [markdown]
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 #
 
-# %% tags=["active-ipynb", "hide-input"]
+# %% tags=["active-ipynb", "hide-input"] editable=true slideshow={"slide_type": ""}
 # experiment_iter = tqdm(exp_conds, "Exp. cond.")
 # for T, σ, τ, ρ, N in experiment_iter:
 #     if (T, σ, τ, ρ, N) in (frames_realizations.keys() & frames_autocorr.keys())  :
 #         continue
 #     
-#     noise = ColoredNoise(0, T, scale=σ, corr_time=τ, impulse_density=ρ, rng=seedseq)
+#     noise = ColoredNoise(0, T, corr_time=τ, scale=σ, impulse_density=ρ, rng=seedseq)
 #     t_arr = np.linspace(noise.t_min, noise.t_max, int(10*T/noise.τ))
 #
 #     ## Generate the realizations and compute their autocorrelation ##
@@ -737,12 +843,110 @@ class ColoredNoise:
 #     frames_realizations[(T, σ, τ, ρ, N)] = fig_realizations
 #     frames_autocorr[(T, σ, τ, ρ, N)] = fig_autocorr
 
-# %% tags=["remove-input", "active-ipynb"]
+# %% tags=["remove-input", "active-ipynb"] editable=true slideshow={"slide_type": ""}
 # hmap_autocorr = hv.HoloMap(frames_autocorr, kdims=[dims.T, dims.σ, dims.τ, dims.ρ, dims.N])
 # hmap_realizations = hv.HoloMap(frames_realizations, kdims=[dims.T, dims.σ, dims.τ, dims.ρ, dims.N])
 # fig = hmap_autocorr + hmap_realizations
 # fig.opts(
 #     hv.opts.Layout(title=""),
-#     hv.opts.Curve(framewise=True)
+#     hv.opts.Curve(framewise=True, width=500),
+#     hv.opts.Overlay(legend_position="top")
 # )
 # fig.cols(1)
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ## Usage examples
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# Scale with units
+
+# %% tags=["active-ipynb"] editable=true slideshow={"slide_type": ""}
+# noise = ColoredNoise(t_min    = 0. *ureg.ms,
+#                      t_max    =10. *ureg.ms,
+#                      corr_time= 1. *ureg.ms,
+#                      scale    = 2.2*ureg.mV,
+#                      impulse_density=30,
+#                      rng=1337)
+# assert noise.Nbins == 10
+# expected_bin_edges = np.array([-5., -4., -3., -2., -1.,  0.,  1.,  2.,  3.,  4.,  5., 
+#                                6.,  7., 8.,  9., 10., 11., 12., 13., 14., 15.])*ureg.ms
+# assert np.allclose(noise.bin_edges, expected_bin_edges)
+# noise(1.)
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# Scalar output
+
+# %% tags=["active-ipynb"] editable=true slideshow={"slide_type": ""}
+# noise = ColoredNoise(t_min    =   0. *ureg.ms,
+#                      t_max    =1000. *ureg.ms,
+#                      corr_time=   1. *ureg.ms,
+#                      scale    =   2.2,
+#                      impulse_density=30)
+# ξ = np.array([noise(t) for t in np.linspace(noise.t_min, noise.t_max, 1000)])
+# ξ.std(axis=0)
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# 1d output
+
+# %% tags=["active-ipynb"] editable=true slideshow={"slide_type": ""}
+# noise = ColoredNoise(t_min    =   0. *ureg.ms,
+#                      t_max    =1000. *ureg.ms,
+#                      corr_time=   1. *ureg.ms,
+#                      scale    =np.array([2.2, 1.1]),
+#                      impulse_density=30)
+# ξ = np.array([noise(t) for t in np.linspace(noise.t_min, noise.t_max, 1000)])
+# ξ.std(axis=0)
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# 2d output
+
+# %% tags=["active-ipynb"] editable=true slideshow={"slide_type": ""}
+# noise = ColoredNoise(t_min    =   0. *ureg.ms,
+#                      t_max    =1000. *ureg.ms,
+#                      corr_time=   1. *ureg.ms,
+#                      scale    =[[2.2, 1.1],
+#                                 [3.3, 4.4]],
+#                      impulse_density=30)
+# ξ = np.array([noise(t) for t in np.linspace(noise.t_min, noise.t_max, 1000)])
+# ξ.std(axis=0)
+
+# %% [markdown] editable=true slideshow={"slide_type": ""} tags=["remove-cell"]
+# ## Serialization
+
+# %% editable=true slideshow={"slide_type": ""} tags=["skip-execution", "remove-cell", "active-ipynb"]
+# from scityping.pydantic import BaseModel
+
+# %% editable=true slideshow={"slide_type": ""} tags=["skip-execution", "remove-cell", "active-ipynb"]
+# noise = ColoredNoise(t_min    =   0. *ureg.ms,
+#                      t_max    =1000. *ureg.ms,
+#                      corr_time=   1. *ureg.ms,
+#                      scale    =np.array([2.2, 1.1]),
+#                      impulse_density=30)
+
+# %% editable=true slideshow={"slide_type": ""} tags=["skip-execution", "remove-cell", "active-ipynb"]
+# data = Serializable.deep_reduce(noise)
+# data
+
+# %% editable=true slideshow={"slide_type": ""} tags=["skip-execution", "remove-cell", "active-ipynb"]
+# noise2 = Serializable.validate(data)
+# noise2
+
+# %% editable=true slideshow={"slide_type": ""} tags=["skip-execution", "remove-cell", "active-ipynb"]
+# tarr = np.linspace(0, 1, 5)
+# assert np.array_equal([noise(t) for t in tarr],
+#                       [noise2(t) for t in tarr])
+
+# %% editable=true slideshow={"slide_type": ""} tags=["skip-execution", "remove-cell", "active-ipynb"]
+# class Foo(BaseModel):
+#     noise: ColoredNoise
+
+# %% editable=true slideshow={"slide_type": ""} tags=["skip-execution", "remove-cell", "active-ipynb"]
+# foo = Foo(noise=noise)
+# foo.json()
+
+# %% editable=true slideshow={"slide_type": ""} tags=["skip-execution", "remove-cell", "active-ipynb"]
+# foo2 = foo.parse_raw(foo.json())
+
+# %% editable=true slideshow={"slide_type": ""} tags=["skip-execution", "remove-cell", "active-ipynb"]
+# assert np.array_equal([foo.noise(t) for t in tarr],
+#                       [foo2.noise(t) for t in tarr])

@@ -3,7 +3,7 @@
 
 title: Using sparse convolutions to generate noisy inputs
 author: Alexandre René
-#logo: logo.png
+logo: logo.png
 
 # Force re-execution of notebooks on each build.
 # See https://jupyterbook.org/content/execute.html
@@ -28,12 +28,14 @@ parse:
   
 # Define the name of the latex output file for PDF builds
 latex:
+  latex_engine              : xelatex  # one of 'pdflatex', 'xelatex' (recommended for unicode), 'luatex', 'platex', 'uplatex'
+  use_jupyterbook_latex     : false # use sphinx-jupyterbook-latex for pdf builds as default
   latex_documents:
     targetname: sparse-conv-noise.tex
 
-# Add a bibtex file so that we can create citations
-bibtex_bibfiles:
-  - references.bib
+# # Add a bibtex file so that we can create citations
+# bibtex_bibfiles:
+#   - references.bib
 
 # Information about where the book exists on the web
 repository:

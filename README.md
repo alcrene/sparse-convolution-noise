@@ -43,7 +43,7 @@ Noise parameters can be specified with [Pint](https://pint.readthedocs.io) units
 ### JAX compatibility
 
 If [JAX](https://jax.readthedocs.io) is installed, `ColoredNoise` will use JAX arrays and operations it its noise generation call. This allows it to be jitted with `jax.jit`.
-Jitting the noise generator on its own does not provide much benefit (it is already quite efficient), but this allows it to be used within a larger function, and still jit that entire function. This is useful for example to compile the equations of an ODE system to integrate.
+Jitting the noise generator on its own does not provide much benefit (it is already quite efficient), but this allows it to be used within a larger function, and still jit that entire function. This is useful for example to compile differential equations to integrate them with an ODE solver.
 
 ## Installation
 

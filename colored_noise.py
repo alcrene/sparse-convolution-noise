@@ -747,8 +747,10 @@ class ColoredNoise(Serializable):
 # ms = ureg.ms
 
 # %% [markdown]
+# :::::{div} full-width
+# ::::{sidebar}
 # :::{admonition} Computing correlations with `scipy.signal`
-# :class: caution, margin, dropdown
+# :class: caution dropdown
 #
 # The SciPy function `signal.correlate` (along with its companion `signal.correlation_lags` to compute the lag axis) is a convenient way to compute the autocorrelation. However before plotting the result, one must take care to normalize it correctly. Indeed, if $x$ is a discretized signal with $N$ time bins, and $C_k$ is its discretized correlation function at lag $k$, then the definition used by `correlate` is
 # \begin{equation}
@@ -762,6 +764,8 @@ class ColoredNoise(Serializable):
 # C^{\text{normed}}(s) = \frac{C(s)}{C(0)} \,.
 # \end{equation}
 # :::
+# ::::
+# :::::
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 #
@@ -843,7 +847,7 @@ class ColoredNoise(Serializable):
 #     frames_realizations[(T, σ, τ, ρ, N)] = fig_realizations
 #     frames_autocorr[(T, σ, τ, ρ, N)] = fig_autocorr
 
-# %% tags=["remove-input", "active-ipynb"] editable=true slideshow={"slide_type": ""}
+# %% tags=["remove-input", "active-ipynb", "full-width"] editable=true slideshow={"slide_type": ""}
 # hmap_autocorr = hv.HoloMap(frames_autocorr, kdims=[dims.T, dims.σ, dims.τ, dims.ρ, dims.N])
 # hmap_realizations = hv.HoloMap(frames_realizations, kdims=[dims.T, dims.σ, dims.τ, dims.ρ, dims.N])
 # fig = hmap_autocorr + hmap_realizations

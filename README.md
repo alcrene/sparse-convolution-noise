@@ -92,7 +92,7 @@ The only dependencies are [NumPy](https://numpy.org). If you want to build the d
 - [SciPy](https://scipy.org)
 - [holoviews](https://holoviews.org/)
 - [pint](https://pint.readthedocs.io)
-- [jupytext]()
+- [jupytext](https://jupytext.readthedocs.io/)
 - [jupyter-book](https://jupyterbook.org)
 - [ghp-import](https://github.com/davisp/ghp-import)  (optional)
 

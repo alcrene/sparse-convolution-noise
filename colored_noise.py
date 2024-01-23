@@ -107,7 +107,7 @@
 #   $\displaystyle
 #   S_{ξξ}(ω) = \lvert \tilde{ξ}(ω) \rvert^2 = \lvert \tilde{h}(ω) \tilde{γ}(ω) \rvert^2 = \lvert \tilde{γ}(ω) \rvert^2  \lvert \tilde{h}(ω) \rvert^2  \,.
 #   $  
-#   However the equality of the power spectra is even more general, since it applies even when the Fourier transforms don't exist. This is useful here, because $γ$ is stochastic: therefore does not have a well-defined Fourier transform, but it does have an autocorrelation function.
+#   However the equality of the power spectra is even more general, since it applies even when the Fourier transforms don't exist. This is useful here because $γ$ is stochastic: it does not have a well-defined Fourier transform, but it does have an autocorrelation function.
 #
 # [^mistake-in-Lewis]: In Lewis this is given as $S_{y}(ω) = S_x(ω) \lvert H(jω)\rvert^2$, with $S_y = S_{ξξ}$, $S_x = S_{γγ}$, $j = i$ and $H$ the Fourier transform of $h$. As far as I can tell the presence of the imaginary factor $j$ is a mistake: at least in the case where the Fourier transform of $γ$ exists, it does not appear (see above footnote). Possibly this is due to the fact that in the study of LTI (linear time-invariant) systems, often the *Laplace* transform of a kernel $h$ is written $H$; then the Fourier transform is written $H(iω)$ (or $H(jω)$ in engineering notation). See e.g. [here](https://en.wikipedia.org/wiki/Linear_time-invariant_system#Fourier_and_Laplace_transforms).
 
@@ -137,7 +137,7 @@
 #
 # - *Support for multivariate output with specified cross-correlation.* (Currently only multivariate output with independent components is supported.)
 #
-# - *Support for more kernels.* One kernel that may be desirable is the exponential, $h(s) = e^{-|s|/τ}$, since often we think of correlation length as the scale of an exponential decay. We find then that $\tilde{h}(ω)$ should be a Lorentz distribution, for which unfortunately $C_{ξξ}(s) = \mathcal{F}^{-1}\bigl\{\,|\tilde{h}(ω)|^2\,\}$ does not Fourier transform easily.[^no-Lorentz-kernel] However, numerical experiments suggest that $C_{ξξ}(s)$ looks an awful lot like a Lorentz distribution – perhaps a suitable approximation could formalize the correspondence. A Lorentzian autocorrelation would be an interesting complement to the Gaussian since it has very different satistics (in particular very heavy tails), and is a frequent alternative to the Gaussian is many applications.
+# - *Support for more kernels.* One kernel that may be desirable is the exponential, $h(s) = e^{-|s|/τ}$, since often we think of correlation length as the scale of an exponential decay. We find then that $\tilde{h}(ω)$ should be a Lorentz distribution, for which unfortunately $C_{ξξ}(s) = \mathcal{F}^{-1}\bigl\{\,|\tilde{h}(ω)|^2\,\}$ does not Fourier transform easily.[^no-Lorentz-kernel] However, numerical experiments suggest that $C_{ξξ}(s)$ looks an awful lot like a Lorentz distribution – perhaps a suitable approximation could formalize the correspondence. A Lorentzian autocorrelation would be an interesting complement to the Gaussian since it has very different satistics (in particular very heavy tails), and is a frequent alternative to the Gaussian in applications.
 #
 # - *Support for arbitrary autocorrelation,* by using FFT to compute the kernel $h$:
 #   \begin{equation*}
@@ -189,8 +189,8 @@
 # :::{grid-item-card} Integrating Wiener noise
 # - ✘ Requires a stochastic (SDE) integrator.
 # - ✘ Sparse trace: trace is composed of discrete time steps. Generating a new intermediate point requires re-integrating everything after that point.[^why-no-ode-integrator]
-# - ✔ Borderline trivial, if one is familiar with stochastic integrals.
-#   Otherwise conceptually and technically difficult.
+# - ✔ Implementation is borderline trivial, if one is familiar with stochastic integrals.
+#   Otherwise conceptually difficult with some technical surprises.
 # - ✔ The autocorrelation is known: it is determined by the number of surrogate variables added for the integrals.
 # - ✘ Limited control over the correlation function: limited to those obtainable by adding a reasonable number of surrogate variables.
 # - ✔ Online algorithm: can easily generate new points.
@@ -237,7 +237,7 @@
 # a larger, more costly function. Being JAX-compatible means we allow that
 # entire function to be jitted. 
 # When used on its own, the noise generator is fast enough that in most cases it
-# probably does not benefit from JIT compilation. Therefore we don't want to force
+# does not benefit from JIT compilation. Therefore we don't want to force
 # a dependency on JAX. We achieve this by defining a few fallbacks in the
 # `except ImportError` branch below, which is executed when JAX is not installed:
 # - All calls to `jnp` are redirected to `np`.
@@ -646,7 +646,7 @@ class ColoredNoise(Serializable):
                             rng      =recreate_rng(self._rng_state)
         )
 
-    # __eq__ and __hash__are mostly implement to support caching
+    # __eq__ and __hash__are mostly implemented to support caching
     # with functools.lru_cache.
 
     def __eq__(self, other):

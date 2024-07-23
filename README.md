@@ -8,6 +8,8 @@ The sparse convolution algorithm is an effective way to generate a noise signal,
 
 For more information on how this works, see the [doc page](https://alcrene.github.io/colored-noise).
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12802822.svg)](https://doi.org/10.5281/zenodo.12802822)
+
 ## Design goals & usage
 
 In applications, often we characterize signals by their autocorrelation function; when we want to characterize them by a single number, that number is generally the *correlation time*, describing the width the of autocorrelation function. Computing the autocorrelation function for a given stochastic system is often a difficult analytical problem. Therefore, an algorithm which promises to solve the *inverse* problem – going from autocorrelation function to a noise – is a valuable tool in the practitioner’s toolkit. This is what the sparse convolution algorithm purports to offer.

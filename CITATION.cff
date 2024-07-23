@@ -1,0 +1,11 @@
+cff-version: 1.1.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: René
+  given-names: Alexandre
+orcid: https://orcid.org/0000-0003-3795-5073
+title: "Solid colored noise using sparse convolutions"
+version: v0.1.0
+doi: 10.5281/zenodo.12802822
+date-released: 2024-07-23
+url: "https://github.com/alcrene/colored-noise"

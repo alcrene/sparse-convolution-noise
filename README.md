@@ -47,6 +47,22 @@ Jitting the noise generator on its own does not provide much benefit (it is alre
 
 ## Installation
 
+- **From PyPI**
+
+  This package can be installed from PyPI with the usual command:
+
+  ```python
+  pip install colored-noise
+  ```
+
+  If all you need is a colored noise with Gaussian autocorrelation, this is certainly the easiest method.
+  
+  That said, if you need anything more, you are encouraged to use one of the methods below to include the source file directly into your code base.
+  This has a few advantages:
+  - It makes it easy to make modifications to add new functionality.
+  - It ensures that people that download your code always get the current version of `colored-noise`, with any potential patches.
+  - It encourages you to take ownership of the code, and maybe peek inside if things don’t work exactly as they expect.
+
 - **Direct copy**
   Everything is contained in the file *colored_noise.py* – about 150 lines of code and 400 lines of documentation & validation. So a very reasonably option is actually to just copy the file into your project and import it as any other module.
 
@@ -76,13 +92,6 @@ Jitting the noise generator on its own does not provide much benefit (it is alre
   ```
 
   It also makes it easier to open pull requests.
-
-- **No pip package ?**
-  Although very simple, this code has not yet been widely used. Therefore I like the fact that by installing the source directly, users are encouraged to take more ownership of the code, and perhaps have a peek if things don’t work exactly as they expect. (Compared to the turn-key usage suggested by a pip install.)
-
-  Having users add this directly to their source code also makes it easier for me to push patches to them if they discover issues, and it simplifies the dependencies for *their* users (since the source is packaged along with their project, there is no dependency on this repo).
-
-  All that said, if there is interest, I can certainly put this on PyPI.
 
 
 ## Dependencies

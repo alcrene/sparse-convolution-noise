@@ -272,9 +272,6 @@ except ImportError:
             slcs = tuple(slice(i,i+l) for i, l in zip(start_indices, slice_sizes))
             return operand[slcs]
 
-# %% editable=true slideshow={"slide_type": ""}
-from scityping.pint import Quantity
-
 # %% tags=["hide-cell"] editable=true slideshow={"slide_type": ""}
 # Optional serialization dependencies with fallbacks
 # (If these are not available, the noise objects still work, they just
@@ -293,8 +290,9 @@ try:
 except ImportError:
     Serializable = object
     BaseModel = object
-    class Quantity:
-        pass
+    class Array: pass
+    class RNGenerator: pass
+    class Quantity: pass
 
 __all__ = ["ColoredNoise"]
 
@@ -688,7 +686,7 @@ class ColoredNoise(Serializable):
 # from types import SimpleNamespace
 # from myst_nb import glue
 # ureg = pint.UnitRegistry()
-# ureg.default_format = "~P"
+# ureg.formatter.default_format = "~P"
 # hv.extension("bokeh", "matplotlib")
 # %matplotlib inline
 

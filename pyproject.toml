@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "colored-noise"
+
+description = "An implementation of the sparse convolution algorithm (Lewis, 1989) for generating solid time-series of colored noise."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MPL 2.0"}
+keywords = ["noise", "colored noise", "sparse convolution", "Perlin noise"]
+dynamic = ["version"]
+
+authors = [
+    {name = "Alexandre René"}
+]
+maintainers = [
+    {name = "Alexandre René"}
+]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics"
+]
+
+dependencies = [
+    "numpy"
+]
+
+[project.optional-dependencies]
+docs = ["scipy", "pint", "holoviews", "matplotlib",
+        "jupytext", "jupyter-book"]
+test = ["scipy", "pint", "holoviews",
+        "scityping"]
+
+[project.urls]
+Homepage      = "https://alcrene.github.io/colored-noise"
+Documentation = "https://alcrene.github.io/colored-noise"
+Repository    = "https://github.com/alcrene/colored-noise"
+Issues        = "https://github.com/alcrene/colored-noise/issues"
+
+[tool.setuptools]
+py-modules = ["colored_noise"]
+
+[tool.setuptools_scm]
+write_to = "_version.py"
+

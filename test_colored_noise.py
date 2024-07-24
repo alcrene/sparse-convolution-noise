@@ -8,7 +8,7 @@ which is much easier for testing.
 import math
 import numpy as np
 
-from colored_noise import ColoredNoise
+from colored_noise_sc import ColoredNoise
 from scityping import Serializable
 
 ## Validation of theoretical expressions

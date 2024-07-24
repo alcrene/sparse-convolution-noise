@@ -3,7 +3,7 @@ requires = ["setuptools>=64", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "colored-noise"
+name = "colored-noise-sc"
 
 description = "An implementation of the sparse convolution algorithm (Lewis, 1989) for generating solid time-series of colored noise."
 readme = "README.md"
@@ -48,7 +48,7 @@ Repository    = "https://github.com/alcrene/colored-noise"
 Issues        = "https://github.com/alcrene/colored-noise/issues"
 
 [tool.setuptools]
-py-modules = ["colored_noise"]
+py-modules = ["colored_noise_sc"]
 
 [tool.setuptools_scm]
 write_to = "_version.py"

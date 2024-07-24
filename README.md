@@ -17,7 +17,7 @@ In applications, often we characterize signals by their autocorrelation function
 This particular implementation focuses on the case where a user desires to generate noise with a particular correlation time. At present only a single class is provided, which generates noise signals with Gaussian autocorrelation. In use one simply specifies the desired time range, correlation time and noise strength:
 
 ```python
-from colored_noise import ColoredNoise
+from colored_noise_sc import ColoredNoise
 
 noise = ColoredNoise(0, 10, scale=2.4, corr_time=1.2)
 ```
@@ -28,7 +28,7 @@ Then one simply evaluates the noise at any time `t`:
 noise(t)
 ```
 
-Specifying values with `pint` units are supported, which can be an effective way to sanity-check your calculations.
+Specifying values with `pint` units is supported, which can be an effective way to sanity-check your calculations.
 
 Conveniently, because the produced noise is dense, it can even be used in integration schemes like adaptive Runge-Kutta, where the required time points are not known ahead of time.
 
@@ -44,8 +44,8 @@ Noise parameters can be specified with [Pint](https://pint.readthedocs.io) units
 
 ### JAX compatibility
 
-If [JAX](https://jax.readthedocs.io) is installed, `ColoredNoise` will use JAX arrays and operations it its noise generation call. This allows it to be jitted with `jax.jit`.
-Jitting the noise generator on its own does not provide much benefit (it is already quite efficient), but this allows it to be used within a larger function, and still jit that entire function. This is useful for example to compile differential equations to integrate them with an ODE solver.
+If [JAX](https://jax.readthedocs.io) is installed, `ColoredNoise` will use JAX arrays and operations in its noise generation call. This allows it to be jitted with `jax.jit`.
+Jitting the noise generator on its own does not provide much benefit (it is already quite efficient), but this allows it to be used within a larger function, and still jit that entire function. This is useful for example to compile differential equations which will then be integrated with an ODE solver.
 
 ## Installation
 
@@ -54,16 +54,16 @@ Jitting the noise generator on its own does not provide much benefit (it is alre
   This package can be installed from PyPI with the usual command:
 
   ```python
-  pip install colored-noise
+  pip install colored-noise-sc
   ```
 
-  If all you need is a colored noise with Gaussian autocorrelation, this is certainly the easiest method.
+If all you need is a colored noise with Gaussian autocorrelation, a `pip install` is certainly the easiest method.
   
-  That said, if you need anything more, you are encouraged to use one of the methods below to include the source file directly into your code base.
-  This has a few advantages:
-  - It makes it easy to make modifications to add new functionality.
-  - It ensures that people that download your code always get the current version of `colored-noise`, with any potential patches.
-  - It encourages you to take ownership of the code, and maybe peek inside if things don’t work exactly as they expect.
+That said, if you need anything more, you are encouraged to use one of the methods below to include the source file directly into your code base.
+This has a few advantages:
+- It makes it easy to make modifications to add new functionality.
+- It ensures that people who download your code always get the current version of `colored-noise-sc`, with any potential patches.
+- It encourages you to take ownership of the code, and maybe peek inside if things don’t work exactly as you expect.
 
 - **Direct copy**
   Everything is contained in the file *colored_noise.py* – about 150 lines of code and 400 lines of documentation & validation. So a very reasonably option is actually to just copy the file into your project and import it as any other module.
@@ -101,15 +101,16 @@ Jitting the noise generator on its own does not provide much benefit (it is alre
 The only dependencies are [NumPy](https://numpy.org). If you want to build the docs yourself, they you also need:
 
 - [SciPy](https://scipy.org)
-- [holoviews](https://holoviews.org/)
-- [pint](https://pint.readthedocs.io)
-- [jupytext](https://jupytext.readthedocs.io/)
-- [jupyter-book](https://jupyterbook.org)
+- [HoloViews](https://holoviews.org/)
+- [Matplotlib](https://matplotlib.org)
+- [Pint](https://pint.readthedocs.io)
+- [Jupytext](https://jupytext.readthedocs.io/)
+- [Jupyter-Book](https://jupyterbook.org)
 - [ghp-import](https://github.com/davisp/ghp-import)  (optional)
 
 ## Building the documentation
 
-First make sure that the above dependencies are installed, and then that Jupyter Notebook version of the code file *colored_noise* exists. The easiest way to do this is usually to open it in the Jupyter Lab interface with "Open as notebook". Alternatively, you can run `jupytext --sync colored_noise.py`.
+First make sure that the above dependencies are installed, and then that Jupyter Notebook version of the code file *colored_noise* exists. The occurs automatically when you open it in the Jupyter Lab interface with "Open as notebook"[^jupytext], and then click "Save". Alternatively, you can run `jupytext --sync colored_noise.py`.
 The actual build command is then
 
 ```bash
@@ -123,3 +124,5 @@ ghp-import -n -p _build/_page/colored_noise/html
 ```
 
 See the [Jupyter Book docs](https://jupyterbook.org/en/stable/basics/building/index.html) for more information.
+
+[^jupytext]: The "Open as notebook" context menu item is provided by the Jupytext plugin.

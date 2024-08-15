@@ -319,7 +319,7 @@ __all__ = ["ColoredNoise"]
 # :::
 #
 # Autocorrelation
-# ~ $\displaystyle C_{ξξ}(s) = σ^2 e^{s^2/2τ^2}$
+# ~ $\displaystyle C_{ξξ}(s) = σ^2 e^{-s^2/2τ^2}$
 # ~ Accessible as `.autocorr`
 #
 # Kernel
